@@ -1,0 +1,39 @@
+{{- if .Values.nextcloud.ingress.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "nextcloud.fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+{{- if .Values.nextcloud.ingress.tls }}
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+{{- end }}
+{{- if .Values.nextcloud.ingress.letsEncrypt }}
+    certmanager.k8s.io/cluster-issuer: letsencrypt
+    kubernetes.io/tls-acme: 'true'
+    nginx.ingress.kubernetes.io/tls-acme: 'true'
+{{- end }}
+{{- if .Values.nextcloud.ingress.annotations }}
+{{ toYaml .Values.nextcloud.ingress.annotations | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.nextcloud.ingress.tls }}
+  tls:
+  - hosts:
+    - {{ .Values.nextcloud.config.serverName }}
+    secretName: {{ .Values.nextcloud.ingress.tlsSecretName | default (printf "%s-%s" "tls" (include "nextcloud.fullname" .)) }}
+{{- end }}
+  rules:
+  - host: {{ .Values.nextcloud.config.serverName }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{ template "nextcloud.fullname" . }}
+          servicePort: {{ .Values.nextcloud.service.port | default "80" }}
+{{- end -}}

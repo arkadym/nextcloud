@@ -1,0 +1,48 @@
+{{- $pvc := .Values.nextcloud.persistence -}}
+{{- $name := include "nextcloud.fullname" . }}
+{{- if and ($pvc.enabled) ($pvc.pvSpec) (not $pvc.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  capacity: 
+    storage: {{ $pvc.size }}
+  accessModes:
+  - {{ $pvc.accessMode }}
+{{ toYaml $pvc.pvSpec | indent 2 }}
+---
+{{- end }}
+{{- if and ($pvc.enabled) (not $pvc.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if $pvc.storageClass }}
+{{- if ne "-" $pvc.storageClass }}
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "{{ $pvc.storageClass }}"
+{{- end }}
+{{- end }}
+spec:
+  accessModes:
+    - {{ $pvc.accessMode }}
+  resources:
+    requests:
+      storage: {{ $pvc.size }}
+{{- if $pvc.storageClass }}
+{{- if eq "-" $pvc.storageClass }}
+  storageClassName: ""
+{{- end }}
+{{- end }}
+{{- end -}}

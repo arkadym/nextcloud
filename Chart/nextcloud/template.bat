@@ -1,0 +1,1 @@
+\elm template . -f values.yaml -n <namespace> > template.yaml

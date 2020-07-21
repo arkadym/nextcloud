@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "nextcloud.fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.nextcloud.service.type }}
+  ports:
+    - port: {{ .Values.nextcloud.service.port | default "80" }}
+      targetPort: nc-http
+      protocol: TCP
+  selector:
+    app: {{ template "nextcloud.fullname" . }}

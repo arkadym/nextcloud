@@ -1,0 +1,269 @@
+## Default values for nextcloud Helm Chart.
+## This is a YAML-formatted file.
+## Declare variables to be passed into your templates.
+
+## Default values for nextcloud
+##
+nextcloud:
+  replicas: 1
+
+  ## Image configuration.
+  image:
+    repository: "nextcloud"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+#    pullSecret: "secret-name"
+
+  ## Resource configuration.
+  resources:
+    requests:
+      memory: "256Mi" 
+      cpu: "300m"
+    limits:
+      memory: "2Gi"
+      cpu: "2"
+
+  ## only set db values if use existing database deployment
+  ##
+  # dbHost: "nextcloud-db-server"
+  # dbDatabase: "nextcloud-db"
+  # dbUsername: "nextcloud-user"
+  # dbPassword: "not-a-password"
+
+  ## config
+  ## sessionToken - A random string used in security hashing methods.
+  ## serverName - FQDN of redmine instance
+  ## email - section to define R&R ActionMailer for redmine
+  ## - tls - will set enable_starttls_auto = true
+  config:
+    serverName: nextcloud.domain.com
+    email:
+      address: "smtp.domain.com"
+      port: 587
+      username: "user"
+      password: "password"
+      from: no-reply@domain.com
+      tls: true
+
+  ## persistent store for files (attachments, files etc)
+  ## pvc - Use k8s persistent volume
+  ## - existingClaim - (non empty) use existing volume, other values are ignored
+  ## - accessMode, size, storageClass (existingClaim must be empty) - create new claim with auto provision
+  ## - storageClass - put "-" for empty (will use default configured by k8s)
+  ## s3_plugin - will use redmine_plugin_objectstorage
+  ## s3_fuse - will use s3fs to mount AWS or any S3 compatible storage
+  persistence:
+    enabled: true
+#    accessMode: "ReadWriteOnce"
+#    size: "10Gi"
+#    storageClass: "-"
+    existingClaim: "nextcloud-data"
+    
+  ## Service configuration.
+  ##
+  service:
+    type: "ClusterIP"
+#    port: "80"
+
+  ## Ingress settings
+  ## tls - true will enable: 
+  ## - tlsSecretName configured - will use custom SSL cert
+  ## - letsEncrypt enabled - will use LE
+  ingress:
+    enabled: true
+    tls: true
+#    tlsSecretName: ""
+    letsEncrypt: true
+
+  # Default config files
+  # IMPORTANT: Will be used only if you put extra configs, otherwise default will come from nextcloud itself
+  # Default confgurations can be found here: https://github.com/nextcloud/docker/tree/master/16.0/apache/config
+  defaultConfigs:
+    # To protect /var/www/html/config
+    .htaccess: true
+    # Redis default configuration
+    redis.config.php: true
+    # Apache configuration for rewrite urls
+    apache-pretty-urls.config.php: true
+    # Define APCu as local cache
+    apcu.config.php: true
+    # Apps directory configs
+    apps.config.php: true
+    # Used for auto configure database
+    autoconfig.php: true
+    # SMTP default configuration
+    smtp.config.php: true
+  # Extra config files created in /var/www/html/config/
+  # ref: https://docs.nextcloud.com/server/15/admin_manual/configuration_server/config_sample_php_parameters.html#multiple-config-php-file
+  configs: {}
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 300
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 10
+    successThreshold: 1
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 10
+    successThreshold: 1
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+## Default values for Database.
+##
+database:
+  enabled: true
+
+  image:
+    tag: "10.5"
+
+  rootUser:
+    password: ""
+    forcePassword: false
+
+  db:
+    user: nextcloud-user
+    password: ""
+    forcePassword: false
+    name: nextcloud
+
+  volumePermissions:
+    enabled: true
+    image:
+      repository: busybox
+      tag: latest
+      pullPolicy: "IfNotPresent"
+
+    resources: {}
+
+  securityContext:
+    enabled: true
+    runAsUser: 1001
+    fsGroup: 1001
+
+  replication:
+    enabled: false
+
+  master:
+    nodeSelector: {}
+    tolerations: []
+
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+    persistence:
+      enabled: true
+      #annotations: {}
+      #accessModes:
+      #- ReadWriteOnce
+      #size: 8Gi
+      existingClaim: "nextcloud-db"
+    
+    livenessProbe:
+      failureThreshold: 10
+
+    readinessProbe:
+      failureThreshold: 10
+
+  service:
+    type: "ClusterIP"
+#    port: "3306"
+
+  tests:
+    enabled: false
+
+redis:
+  enabled: true
+
+  image:
+    tag: "6.0.6"
+
+  cluster:
+    enabled: true
+    slaveCount: 0
+
+  sentinel: 
+    enabled: true
+
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+  master:
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+    persistence:
+      enabled: true
+      storageClass: "actonica-nfs1"
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+
+  slave:
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+    persistence:
+      enabled: true
+      storageClass: "actonica-nfs1"
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+
+  volumePermissions:
+    enabled: true
+    image:
+      repository: busybox
+      tag: latest
+      pullPolicy: "IfNotPresent"
+
+    resources: {}
+
+  securityContext:
+    enabled: true
+    runAsUser: 1001
+    fsGroup: 1001
+
+onlyoffice:
+  enabled: false
+
+elasticsearch:
+  enabled: false
+
+backup-db:
+  enabled: false
+
+backup-config:
+  enabled: false
+
+backup-data-sync:
+  enabled: false

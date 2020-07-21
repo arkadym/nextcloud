@@ -1,0 +1,171 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ template "nextcloud.fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "nextcloud.fullname" . }}
+  replicas: {{ .Values.nextcloud.replicas }}
+  strategy:
+    type: Recreate 
+  template:
+    metadata:
+      labels:
+        app: {{ template "nextcloud.fullname" . }}
+    spec:
+{{- if .Values.nextcloud.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.nextcloud.image.pullSecret }}
+{{- end }}
+      containers:
+        - name: {{ .Chart.Name }}-app
+          image: "{{ .Values.nextcloud.image.repository }}:{{ .Values.nextcloud.image.tag }}"
+          imagePullPolicy: {{ .Values.nextcloud.image.pullPolicy }}
+#          command: ['/bin/sh', '-c', 'while true; do echo hello; sleep 10;done']
+{{- if .Values.nextcloud.resources }}
+          resources:
+{{ toYaml .Values.nextcloud.resources | indent 12 }}
+{{- end }}
+          env:
+            - name: MYSQL_HOST
+{{- if .Values.nextcloud.dbHost }}
+              value: {{ .Values.nextcloud.dbHost }}
+{{- else }}
+              value: {{ template "nextcloud.database.fullname" . }}
+{{- end }}
+            - name: MYSQL_DATABASE
+{{- if .Values.nextcloud.dbDatabase }}
+              value: {{ .Values.nextcloud.dbDatabase }}
+{{- else if .Values.database.db.name }}
+              value: {{ .Values.database.db.name }}
+{{- else }}
+              value: {{ .Chart.Name }}
+{{- end }}
+            - name: MYSQL_USER
+{{- if .Values.nextcloud.dbUsername }}
+              value: {{ .Values.nextcloud.dbUsername }}
+{{- else if .Values.database.db.user }}
+              value: {{ .Values.database.db.user }}
+{{- else }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "nextcloud.database.fullname" . }}
+                  key: database-user
+{{- end }}
+            - name: MYSQL_PASSWORD
+{{- if .Values.nextcloud.dbPassword }}
+              value: {{ .Values.nextcloud.dbPassword }}
+{{- else }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "nextcloud.database.fullname" . }}
+                  key: database-password
+{{- end }}
+            - name: SMTP_HOST
+              value: {{ .Values.nextcloud.config.email.address | quote }}
+            - name: SMTP_PORT
+              value: {{ .Values.nextcloud.config.email.port | quote }}
+            - name: SMTP_NAME
+              value: {{ .Values.nextcloud.config.email.username | quote }}
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "nextcloud.fullname" . }}
+                  key: smtp-password
+{{- if .Values.nextcloud.config.email.tls }}
+            - name: SMTP_SECURE
+              value: "ssl"
+{{- end }}
+{{- if .Values.redis.enabled }}
+            - name: REDIS_HOST
+              value: {{ template "nextcloud.redis.fullname" . }}
+            - name: REDIS_HOST_PORT
+{{- if .Values.redis.sentinel.enabled }}
+              value: {{ .Values.redis.sentinel.service.sentinelPort | quote }}
+{{- else }}
+              value: {{ .Values.redis.redisPort | quote }}
+{{- end }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "nextcloud.redis.fullname" . }}
+                  key: redis-password
+{{- end }}
+          ports:
+            - name: nc-http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: secrets
+              mountPath: /etc/app-secrets
+              readOnly: true
+{{- if .Values.nextcloud.persistence.enabled }}
+            - name: data
+              mountPath: /var/www/html
+{{- end }}
+{{- range $key, $value := .Values.nextcloud.configs }}
+            - name: nextcloud-config
+              mountPath: /var/www/html/config/{{ $key }}
+              subPath: {{ $key }}
+{{- end }}
+{{- range $key, $value := .Values.nextcloud.defaultConfigs }}
+{{- if $value }}
+            - name: nextcloud-config
+              mountPath: /var/www/html/config/{{ $key }}
+              subPath: {{ $key }}
+{{- end }}
+{{- end }}
+{{- if .Values.nextcloud.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /status.php
+              port: 80
+            initialDelaySeconds: {{ .Values.nextcloud.readinessProbe.initialDelaySeconds | default "300" }}
+            periodSeconds: {{ .Values.nextcloud.readinessProbe.periodSeconds | default "30" }}
+            timeoutSeconds: {{ .Values.nextcloud.readinessProbe.timeoutSeconds | default "10" }}
+            successThreshold: {{ .Values.nextcloud.readinessProbe.successThreshold | default "1" }}
+            failureThreshold: {{ .Values.nextcloud.readinessProbe.failureThreshold | default "3" }}
+{{- end }}
+{{- if .Values.nextcloud.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /status.php
+              port: 80
+            initialDelaySeconds: {{ .Values.nextcloud.livenessProbe.initialDelaySeconds | default "120" }}
+            periodSeconds: {{ .Values.nextcloud.livenessProbe.periodSeconds | default "30" }}
+            timeoutSeconds: {{ .Values.nextcloud.livenessProbe.timeoutSeconds | default "10" }}
+            successThreshold: {{ .Values.nextcloud.livenessProbe.successThreshold | default "1" }}
+            failureThreshold: {{ .Values.nextcloud.livenessProbe.failureThreshold | default "3" }}
+{{- end }}
+{{- with .Values.nextcloud.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.nextcloud.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.nextcloud.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+      volumes:
+        - name: secrets
+          secret:
+            secretName: {{ template "nextcloud.fullname" . }}
+{{- if .Values.nextcloud.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.nextcloud.persistence.existingClaim | default (include "nextcloud.fullname" .) }}
+{{- end }}
+{{- if or .Values.nextcloud.configs .Values.nextcloud.defaultConfigs }}
+        - name: nextcloud-config
+          configMap:
+            name: {{ template "nextcloud.fullname" . }}-config
+{{- end }}
