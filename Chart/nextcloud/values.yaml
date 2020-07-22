@@ -36,13 +36,13 @@ nextcloud:
   ## email - section to define R&R ActionMailer for redmine
   ## - tls - will set enable_starttls_auto = true
   config:
-    serverName: nextcloud.domain.com
+    serverName: nextcloud.domain.tld
     email:
-      address: "smtp.domain.com"
+      address: "smtp.domain.tld"
       port: 587
       username: "user"
       password: "password"
-      from: no-reply@domain.com
+      from: no-reply@domain.tld
       tls: true
 
   ## persistent store for files (attachments, files etc)
@@ -254,16 +254,137 @@ redis:
     fsGroup: 1001
 
 onlyoffice:
-  enabled: false
+  enabled: true
+
+  secret:
+    enabled: true
+#    password: ""
+
+  settings:
+    maxDocumentSize: 200 # size in MB
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "300m"
+    limits:
+      memory: "1Gi"
+      cpu: "1"
+
+  ## Ingress settings
+  ## tls - true will enable: 
+  ## - tlsSecretName configured - will use custom SSL cert
+  ## - letsEncrypt enabled - will use LE
+  ingress:
+    enabled: true
+    tls: true
+#    tlsSecretName: ""
+    letsEncrypt: true
+    serverName: "onlyoffice.domain.tld"
 
 elasticsearch:
-  enabled: false
+  enabled: true
+
+  ## options
+#  password: "not-a-password"
+#  clusterName: ""
+#  nodeName: ""
+#  javaOpts: ""
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "300m"
+    limits:
+      memory: "1Gi"
+      cpu: "1"
 
 backup-db:
-  enabled: false
+  enabled: true
+
+  ## Image configuration.
+  ##
+  image:
+    repository: "arkadym/kube-backup"
+    tag: "1.20"
+
+  database:
+    mysql:
+      server: "RELEASE-NAME-database"
+      databases: "nextcloud" # space separated list of DBs to backup
+      username: "nextcloud-user"
+#      password: ""
+      secret:
+        name: "RELEASE-NAME-database"
+#        userKey: ""
+        passwordKey: "database-password"
+
+  config:
+    mode: backup # allowed values are: backup, sync
+    cronSchedule: "0 5 * * *" # every day 5am
+    backupDays: 5
 
 backup-config:
-  enabled: false
+  enabled: true
+
+  ## Image configuration.
+  ##
+  image:
+    repository: "arkadym/kube-backup"
+    tag: "1.20"
+
+  storage:
+    azure: 
+      accountKey: "azure-account-key"
+      accountName: "azure-account-name"
+      containerName: "container-name"
+#      prefix: ""
+
+  folders:
+    - name: nextcloud-data
+      path: /var/www/html
+      exclude:
+      - data
+      volume:
+        persistentVolumeClaim:
+          claimName: RELEASE-NAME-app
+
+  config:
+    mode: backup # allowed values are: backup, sync
+    cronSchedule: "0 5 * * *" # every day 5am
+    backupDays: 5
+
+  persistence:
+    enabled: true
+    accessMode: "ReadWriteOnce"
+    size: "10Gi"
+    storageClass: "actonica-nfs1"
 
 backup-data-sync:
-  enabled: false
+  enabled: true
+
+  ## Image configuration.
+  ##
+  image:
+    repository: "arkadym/kube-backup"
+    tag: "1.20"
+
+  storage:
+    azure: 
+      accountKey: "azure-account-key"
+      accountName: "azure-account-name"
+      containerName: "container-name"
+#      prefix: ""
+
+  folders:
+    - name: nextcloud-data
+      path: /var/www/html/data
+      subPath: data
+      exclude: {}
+      volume:
+        persistentVolumeClaim:
+          claimName: RELEASE-NAME-app
+
+  config:
+    mode: sync # allowed values are: backup, sync
+    cronSchedule: "40 18 * * *" # every day 5am

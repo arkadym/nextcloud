@@ -1,1 +1,1 @@
-﻿helm dep update
+\kubectl\helm dep update

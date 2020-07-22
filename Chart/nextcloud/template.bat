@@ -1,1 +1,1 @@
-\elm template . -f values.yaml -n <namespace> > template.yaml
+\kubectl\helm template . -f values.yaml --namespace namespace > template.yaml
