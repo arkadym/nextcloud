@@ -306,7 +306,7 @@ backup-db:
   ##
   image:
     repository: "arkadym/kube-backup"
-    tag: "1.20"
+    tag: "1.22"
 
   database:
     mysql:
@@ -331,7 +331,7 @@ backup-config:
   ##
   image:
     repository: "arkadym/kube-backup"
-    tag: "1.20"
+    tag: "1.22"
 
   storage:
     azure: 
@@ -367,7 +367,7 @@ backup-data-sync:
   ##
   image:
     repository: "arkadym/kube-backup"
-    tag: "1.20"
+    tag: "1.22"
 
   storage:
     azure: 

@@ -10,14 +10,16 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: {{ template "nextcloud.fullname" . }}
+      app: {{ template "name" . }}
+      release: {{ .Release.Name }}
   replicas: {{ .Values.nextcloud.replicas }}
   strategy:
     type: Recreate 
   template:
     metadata:
       labels:
-        app: {{ template "nextcloud.fullname" . }}
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
     spec:
 {{- if .Values.nextcloud.image.pullSecret }}
       imagePullSecrets:

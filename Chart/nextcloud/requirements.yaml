@@ -5,29 +5,29 @@ dependencies:
   alias: database
   condition: database.enabled
 - name: redis
-  version: ~10.7.9
+  version: ~10.7.11
   repository: https://charts.bitnami.com/bitnami
   condition: redis.enabled
 - name: onlyoffice
-  version: 1
+  version: ~1.2
   repository: https://arkadym.github.io/helm
   condition: onlyoffice.enabled
 - name: elasticsearch
-  version: 1.1
+  version: ~1.2
   repository: https://arkadym.github.io/helm
   condition: elasticsearch.enabled
 - name: kube-backup
-  version: 1.1
+  version: ~1.2
   repository: https://arkadym.github.io/helm
   alias: backup-db
   condition: backup-db.enabled
 - name: kube-backup
-  version: 1.1
+  version: ~1.2
   repository: https://arkadym.github.io/helm
   alias: backup-config
   condition: backup-config.enabled
 - name: kube-backup
-  version: 1.1
+  version: ~1.2
   repository: https://arkadym.github.io/helm
   alias: backup-data-sync
   condition: backup-data-sync.enabled
