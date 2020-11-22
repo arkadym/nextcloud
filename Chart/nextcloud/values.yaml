@@ -57,7 +57,7 @@ nextcloud:
 #    accessMode: "ReadWriteOnce"
 #    size: "10Gi"
 #    storageClass: "-"
-    existingClaim: "nextcloud-data"
+#    existingClaim: "nextcloud-data"
     
   ## Service configuration.
   ##
