@@ -45,4 +45,20 @@ spec:
   storageClassName: ""
 {{- end }}
 {{- end }}
+{{- else }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  accessModes:
+    - {{ $pvc.accessMode }}
+  resources:
+    requests:
+      storage: {{ $pvc.size }}
 {{- end -}}

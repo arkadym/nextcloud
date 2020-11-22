@@ -168,10 +168,10 @@ database:
     persistence:
       enabled: true
       #annotations: {}
-      #accessModes:
-      #- ReadWriteOnce
-      #size: 8Gi
-      existingClaim: "nextcloud-db"
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+      #existingClaim: "nextcloud-db"
     
     livenessProbe:
       failureThreshold: 10
@@ -218,7 +218,6 @@ redis:
 
     persistence:
       enabled: true
-      storageClass: "actonica-nfs1"
       accessModes:
         - ReadWriteOnce
       size: 8Gi
@@ -234,7 +233,6 @@ redis:
 
     persistence:
       enabled: true
-      storageClass: "actonica-nfs1"
       accessModes:
         - ReadWriteOnce
       size: 8Gi

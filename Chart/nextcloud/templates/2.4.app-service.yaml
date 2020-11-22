@@ -10,7 +10,8 @@ metadata:
 spec:
   type: {{ .Values.nextcloud.service.type }}
   ports:
-    - port: {{ .Values.nextcloud.service.port | default "80" }}
+    - name: nc-http
+      port: {{ .Values.nextcloud.service.port | default "80" }}
       targetPort: nc-http
       protocol: TCP
   selector:
