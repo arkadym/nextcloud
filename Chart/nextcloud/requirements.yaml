@@ -9,7 +9,7 @@ dependencies:
   repository: https://charts.bitnami.com/bitnami
   condition: redis.enabled
 - name: onlyoffice
-  version: ~1.4
+  version: ~1.6
   repository: https://arkadym.github.io/helm
   condition: onlyoffice.enabled
 - name: elasticsearch

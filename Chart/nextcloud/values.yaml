@@ -81,10 +81,10 @@ nextcloud:
   defaultConfigs:
     # To protect /var/www/html/config
     .htaccess: true
-    # Redis default configuration
-    redis.config.php: true
     # Apache configuration for rewrite urls
     apache-pretty-urls.config.php: true
+    # Redis default configuration
+    redis.config.php: true
     # Define APCu as local cache
     apcu.config.php: true
     # Apps directory configs
@@ -259,6 +259,7 @@ onlyoffice:
 #    password: ""
 
   settings:
+#    serverName: "onlyoffice.domain.tld"
     maxDocumentSize: 200 # size in MB
 
   resources:
@@ -278,7 +279,6 @@ onlyoffice:
     tls: true
 #    tlsSecretName: ""
     letsEncrypt: true
-    serverName: "onlyoffice.domain.tld"
 
 elasticsearch:
   enabled: true

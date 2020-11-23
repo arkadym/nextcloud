@@ -67,7 +67,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ template "nextcloud.database.fullname" . }}
-                  key: database-password
+                  key: mariadb-password
 {{- end }}
             - name: SMTP_HOST
               value: {{ .Values.nextcloud.config.email.address | quote }}
