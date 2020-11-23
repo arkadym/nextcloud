@@ -1,0 +1,1 @@
+﻿echo https://{{ .Values.nextcloud.config.serverName }}/
