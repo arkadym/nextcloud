@@ -25,6 +25,53 @@ spec:
       imagePullSecrets:
         - name: {{ .Values.nextcloud.image.pullSecret }}
 {{- end }}
+      initContainers:
+        - name: nextcloud-perm
+          image: busybox
+          command:
+            - 'sh'
+            - '-c'
+            - |
+              if [ ! -f /tmp/html/version.php ]; then
+                chown -R www-data:www-data /tmp/www {{- if .Values.nextcloud.dataVolume.enabled -}}/tmp/data {{- end -}}{{- if .Values.nextcloud.extraVolumes -}}{{- range $index, $pvc := .Values.nextcloud.extraVolumes -}}{{ $pvc.mountPath }} {{- end -}}{{- end -}}
+              fi
+          volumeMounts:
+{{- if .Values.nextcloud.persistence.enabled }}
+            - name: nextcloud-www
+              mountPath: /tmp/www
+            - name: nextcloud-www
+              mountPath: /tmp/root
+              subPath: root
+            - name: nextcloud-www
+              mountPath: /tmp/html
+              subPath: html
+{{- if .Values.nextcloud.dataVolume.enabled }}
+            - name: nextcloud-data
+              mountPath: /tmp/data
+{{- else }}
+            - name: nextcloud-www
+              mountPath: /tmp/data
+              subPath: data
+{{- end }}
+            - name: nextcloud-www
+              mountPath: /tmp/config
+              subPath: config
+            - name: nextcloud-www
+              mountPath: /tmp/custom_apps
+              subPath: custom_apps
+            - name: nextcloud-www
+              mountPath: /tmp/themes
+              subPath: themes
+            - name: nextcloud-www
+              mountPath: /tmp/tmp
+              subPath: tmp
+{{- end }}
+{{- if .Values.nextcloud.extraVolumes }}
+{{- range $index, $pvc := .Values.nextcloud.extraVolumes }}
+            - name: {{ $pvc.name }}
+              mountPath: {{ $pvc.mountPath }}
+{{- end }}
+{{- end }}
       containers:
         - name: {{ .Chart.Name }}-app
           image: "{{ .Values.nextcloud.image.repository }}:{{ .Values.nextcloud.image.tag }}"
