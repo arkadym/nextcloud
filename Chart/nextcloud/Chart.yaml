@@ -2,7 +2,8 @@ apiVersion: v1
 home: https://github.com/arkadym/nextcloud
 description: A Nexcloud Helm chart for Kubernetes. Idea and docker images are taken from Bitnami.
 name: nextcloud
-version: 1.6
+icon: https://cdn.rawgit.com/docker-library/docs/defa5ffc7123177acd60ddef6e16bddf694cc35f/nextcloud/logo.svg
+version: "1.14"
 sources:
   - https://github.com/arkadym/nextcloud/tree/master/Chart/nextcloud
 maintainers:

@@ -1,0 +1,1 @@
+helm upgrade --install --namespace <namespace> <release-name> -f nextcloud\values.yaml nextcloud

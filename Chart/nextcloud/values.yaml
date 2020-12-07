@@ -11,8 +11,8 @@ nextcloud:
   image:
     repository: "nextcloud"
     tag: "latest"
-    pullPolicy: "IfNotPresent"
-#    pullSecret: "secret-name"
+    # pullPolicy: "IfNotPresent"
+    # pullSecret: "secret-name"
 
   ## Resource configuration.
   resources:
@@ -36,7 +36,8 @@ nextcloud:
   ## email - section to define R&R ActionMailer for redmine
   ## - tls - will set enable_starttls_auto = true
   config:
-    serverName: nextcloud.domain.tld
+    serverName: "nextcloud.domain.tld"
+    # dataDirectory: /data
     email:
       address: "smtp.domain.tld"
       port: 587
@@ -44,20 +45,44 @@ nextcloud:
       password: "password"
       from: no-reply@domain.tld
       tls: true
+    ## admin user account
+    admin:
+      username: admin
+      # password: "not-a-password"
 
-  ## persistent store for files (attachments, files etc)
+  ## persistent store for files
   ## pvc - Use k8s persistent volume
   ## - existingClaim - (non empty) use existing volume, other values are ignored
   ## - accessMode, size, storageClass (existingClaim must be empty) - create new claim with auto provision
   ## - storageClass - put "-" for empty (will use default configured by k8s)
-  ## s3_plugin - will use redmine_plugin_objectstorage
-  ## s3_fuse - will use s3fs to mount AWS or any S3 compatible storage
   persistence:
     enabled: true
 #    accessMode: "ReadWriteOnce"
 #    size: "10Gi"
 #    storageClass: "-"
-#    existingClaim: "nextcloud-data"
+#    existingClaim: "nextcloud-www"
+
+  dataVolume: 
+    enabled: false
+    # accessMode: "ReadWriteOnce"
+    # size: "1000Gi"
+    # storageClass: "-"
+    # existingClaim: "nextcloud-data"
+    # pvSpec:
+    #   nfs:
+    #     server: 192.168.1.2
+    #     path: /export/data
+
+  extraVolumes: {}
+    # - name: data
+    #   accessMode: "ReadWriteMany"
+    #   size: "100Gi"
+    #   storageClass: "-"
+    #   existingClaim: "extra-vol"
+    #   pvSpec:
+    #     nfs:
+    #       server: 192.168.1.2
+    #       path: /export/extra_vol
     
   ## Service configuration.
   ##
@@ -69,11 +94,31 @@ nextcloud:
   ## tls - true will enable: 
   ## - tlsSecretName configured - will use custom SSL cert
   ## - letsEncrypt enabled - will use LE
+  ## Check/Set:
+  ## - config - serverName
+  ## - config - custom.config.php for protocol in case SSL/TLS used
   ingress:
     enabled: true
     tls: true
 #    tlsSecretName: ""
-    letsEncrypt: true
+    annotations: {}
+      ## letsEncrypt - cert-manager
+      # certmanager.k8s.io/cluster-issuer: letsencrypt
+      # kubernetes.io/tls-acme: 'true'
+      # nginx.ingress.kubernetes.io/tls-acme: 'true'
+      ## max upload size for nginx ingress
+      # nginx.ingress.kubernetes.io/proxy-body-size: "100G"
+
+  extraIngresses: 
+    - name: "extra1"
+      serverName: "extra.domain.tld"
+      tls: true
+      # tlsSecretName: ""
+      annotations: {}
+        # certmanager.k8s.io/cluster-issuer: letsencrypt
+        # kubernetes.io/tls-acme: 'true'
+        # nginx.ingress.kubernetes.io/tls-acme: 'true'
+        # nginx.ingress.kubernetes.io/proxy-body-size: "100G"
 
   # Default config files
   # IMPORTANT: Will be used only if you put extra configs, otherwise default will come from nextcloud itself
@@ -84,7 +129,7 @@ nextcloud:
     # Apache configuration for rewrite urls
     apache-pretty-urls.config.php: true
     # Redis default configuration
-    redis.config.php: true
+    redis.config.php: false
     # Define APCu as local cache
     apcu.config.php: true
     # Apps directory configs
@@ -95,7 +140,14 @@ nextcloud:
     smtp.config.php: true
   # Extra config files created in /var/www/html/config/
   # ref: https://docs.nextcloud.com/server/15/admin_manual/configuration_server/config_sample_php_parameters.html#multiple-config-php-file
+  # CAN_INSTAL is temp file to be remove once Nextcloud setup finished
   configs: {}
+    # custom.config.php: |-
+    #   <?php
+    #   $CONFIG = array (
+    #     'overwriteprotocol' => 'https',
+    #   ); 
+    # CAN_INSTALL: ""
 
   readinessProbe:
     enabled: true
@@ -117,6 +169,29 @@ nextcloud:
   tolerations: []
 
   affinity: {}
+
+  cronjob:
+    enabled: false
+
+    image:
+      repository: "curlimages/curl"
+      tag: "latest"
+      # pullPolicy: "IfNotPresent"
+      # pullSecret: "secret-name"
+
+    resources: {}
+      # requests:
+      #   memory: "256Mi" 
+      #   cpu: "300m"
+      # limits:
+      #   memory: "2Gi"
+      #   cpu: "2"
+
+    # curlInsecure: false
+    schedule: "*/5 * * * *" # every 5 min
+    successfulJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 1
+    backoffLimit: 0
 
 ## Default values for Database.
 ##
@@ -187,7 +262,7 @@ database:
     enabled: false
 
 redis:
-  enabled: true
+  enabled: false
 
   image:
     tag: "6.0.6"
@@ -259,7 +334,7 @@ onlyoffice:
 #    password: ""
 
   settings:
-#    serverName: "onlyoffice.domain.tld"
+    serverName: "onlyoffice.domain.tld"
     maxDocumentSize: 200 # size in MB
 
   resources:
@@ -284,10 +359,16 @@ elasticsearch:
   enabled: true
 
   ## options
-#  password: "not-a-password"
-#  clusterName: ""
-#  nodeName: ""
-#  javaOpts: ""
+  # password: "not-a-password"
+  # clusterName: ""
+  # nodeName: ""
+  # javaOpts: ""
+
+  # persistence:
+  #   enabled: true
+  #   accessModes:
+  #     - ReadWriteOnce
+  #   size: 30Gi
 
   resources:
     requests:

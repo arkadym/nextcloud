@@ -1,1 +1,0 @@
-\kubectl\helm template rel-name . -f values.yaml --namespace namespace > template.yaml

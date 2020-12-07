@@ -1,0 +1,56 @@
+{{- if .Values.nextcloud.cronjob.enabled }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "nextcloud.fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+#  schedule: "*/5 * * * *" # every 5 min (0, 5, 10, etc of hour)
+  schedule: {{ .Values.nextcloud.cronjob.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.nextcloud.cronjob.successfulJobsHistoryLimit | default "1" }}
+  failedJobsHistoryLimit: {{ .Values.nextcloud.cronjob.failedJobsHistoryLimit | default "1" }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.nextcloud.cronjob.backoffLimit | default "0" }}
+      template:
+        metadata:
+          labels:
+            app: {{ template "nextcloud.fullname" . }}
+        spec:
+          restartPolicy: Never
+{{- if .Values.nextcloud.cronjob.image.pullSecret }}
+          imagePullSecrets:
+            - name: {{ .Values.nextcloud.cronjob.image.pullSecret }}
+{{- end }}
+          containers:
+            - name: cronjob
+              image: "{{ .Values.nextcloud.cronjob.image.repository }}:{{ .Values.nextcloud.cronjob.image.tag }}"
+{{- if .Values.nextcloud.cronjob.image.pullPolicy }}
+              imagePullPolicy: {{ .Values.nextcloud.cronjob.image.pullPolicy }}
+{{- end }}
+              command: [ "curl" ]
+              args:
+{{- if .Values.nextcloud.ingress.enabled }}
+{{- if .Values.nextcloud.cronjob.curlInsecure }}
+                - "-k"
+{{- end }}
+                - "--fail"
+                - "-L"
+{{- if .Values.nextcloud.ingress.tls }}
+                - "https://{{ .Values.nextcloud.config.serverName }}/cron.php"
+{{- else }}
+                - "http://{{ .Values.nextcloud.config.serverName }}/cron.php"
+{{- end }}
+{{- else }}
+                - "http://{{ template "nextcloud.fullname" . }}:{{ .Values.service.port }}/cron.php"
+{{- end }}
+{{- if .Values.nextcloud.cronjob.resources }}
+              resources:
+{{ toYaml .Values.nextcloud.cronjob.resources | indent 16 }}
+{{- end }}
+{{- end }}

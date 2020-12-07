@@ -1,15 +1,19 @@
-{{- $pvc := .Values.nextcloud.persistence -}}
-{{- $name := include "nextcloud.fullname" . }}
-{{- if and ($pvc.enabled) ($pvc.pvSpec) (not $pvc.existingClaim) }}
+{{- if .Values.nextcloud.extraVolumes }}
+{{- range $index, $pvc := .Values.nextcloud.extraVolumes }}
+{{- if gt $index 0 }}
+---
+{{- end }}
+{{- $name := printf "%s-%s" (include "nextcloud.fullname" $) $pvc.name }}
+{{- if and $pvc.pvSpec (not $pvc.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ $name }}
   labels:
-    app: {{ template "name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    app: {{ template "name" $ }}
+    chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
 spec:
   capacity: 
     storage: {{ $pvc.size }}
@@ -18,16 +22,16 @@ spec:
 {{ toYaml $pvc.pvSpec | indent 2 }}
 ---
 {{- end }}
-{{- if and ($pvc.enabled) (not $pvc.existingClaim) }}
+{{- if not $pvc.existingClaim }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ $name }}
   labels:
-    app: {{ template "name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    app: {{ template "name" $ }}
+    chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
 {{- if $pvc.storageClass }}
 {{- if ne "-" $pvc.storageClass }}
   annotations:
@@ -45,16 +49,16 @@ spec:
   storageClassName: ""
 {{- end }}
 {{- end }}
-{{- else if $pvc.enabled }}
+{{- else }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ $name }}
   labels:
-    app: {{ template "name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    app: {{ template "name" $ }}
+    chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
 {{- if $pvc.storageClass }}
 {{- if ne "-" $pvc.storageClass }}
   annotations:
@@ -73,3 +77,5 @@ spec:
 {{- end }}
 {{- end }}
 {{- end -}}
+{{- end }}
+{{- end }}

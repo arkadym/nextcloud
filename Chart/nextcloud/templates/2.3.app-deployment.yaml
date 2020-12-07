@@ -80,6 +80,10 @@ spec:
                 secretKeyRef:
                   name: {{ template "nextcloud.fullname" . }}
                   key: smtp-password
+            - name: MAIL_FROM_ADDRESS
+              value: {{ .Values.nextcloud.config.email.from | quote }}
+            - name: MAIL_DOMAIN
+              value: {{ .Values.nextcloud.config.email.domain | quote }}
 {{- if .Values.nextcloud.config.email.tls }}
             - name: SMTP_SECURE
               value: "ssl"
@@ -99,6 +103,21 @@ spec:
                   name: {{ template "nextcloud.redis.fullname" . }}
                   key: redis-password
 {{- end }}
+{{- if and .Values.nextcloud.config.admin .Values.nextcloud.config.admin.username }}
+            - name: NEXTCLOUD_ADMIN_USER
+              value: {{ .Values.nextcloud.config.admin.username | quote }}
+            - name: NEXTCLOUD_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "nextcloud.fullname" . }}
+                  key: admin-password
+{{- end }}
+            - name: NEXTCLOUD_TRUSTED_DOMAINS
+              value: {{ .Values.nextcloud.config.serverName | quote }}
+{{- if .Values.nextcloud.config.dataDirectory }}
+            - name: NEXTCLOUD_DATA_DIR
+              value: {{ .Values.nextcloud.config.dataDirectory | quote }}
+{{- end }}
           ports:
             - name: nc-http
               containerPort: 80
@@ -108,8 +127,32 @@ spec:
               mountPath: /etc/app-secrets
               readOnly: true
 {{- if .Values.nextcloud.persistence.enabled }}
-            - name: data
+            - name: nextcloud-www
+              mountPath: /var/www
+              subPath: root
+            - name: nextcloud-www
               mountPath: /var/www/html
+              subPath: html
+{{- if .Values.nextcloud.dataVolume.enabled }}
+            - name: nextcloud-data
+              mountPath: /var/www/html/data
+{{- else }}
+            - name: nextcloud-www
+              mountPath: /var/www/html/data
+              subPath: data
+{{- end }}
+            - name: nextcloud-www
+              mountPath: /var/www/html/config
+              subPath: config
+            - name: nextcloud-www
+              mountPath: /var/www/html/custom_apps
+              subPath: custom_apps
+            - name: nextcloud-www
+              mountPath: /var/www/html/themes
+              subPath: themes
+            - name: nextcloud-www
+              mountPath: /var/www/tmp
+              subPath: tmp
 {{- end }}
 {{- range $key, $value := .Values.nextcloud.configs }}
             - name: nextcloud-config
@@ -123,11 +166,17 @@ spec:
               subPath: {{ $key }}
 {{- end }}
 {{- end }}
+{{- if .Values.nextcloud.extraVolumes }}
+{{- range $index, $pvc := .Values.nextcloud.extraVolumes }}
+            - name: {{ $pvc.name }}
+              mountPath: {{ $pvc.mountPath }}
+{{- end }}
+{{- end }}
 {{- if .Values.nextcloud.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
               path: /status.php
-              port: 80
+              port: nc-http
             initialDelaySeconds: {{ .Values.nextcloud.readinessProbe.initialDelaySeconds | default "300" }}
             periodSeconds: {{ .Values.nextcloud.readinessProbe.periodSeconds | default "30" }}
             timeoutSeconds: {{ .Values.nextcloud.readinessProbe.timeoutSeconds | default "10" }}
@@ -138,7 +187,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /status.php
-              port: 80
+              port: nc-http
             initialDelaySeconds: {{ .Values.nextcloud.livenessProbe.initialDelaySeconds | default "120" }}
             periodSeconds: {{ .Values.nextcloud.livenessProbe.periodSeconds | default "30" }}
             timeoutSeconds: {{ .Values.nextcloud.livenessProbe.timeoutSeconds | default "10" }}
@@ -162,12 +211,24 @@ spec:
           secret:
             secretName: {{ template "nextcloud.fullname" . }}
 {{- if .Values.nextcloud.persistence.enabled }}
-        - name: data
+        - name: nextcloud-www
           persistentVolumeClaim:
             claimName: {{ .Values.nextcloud.persistence.existingClaim | default (include "nextcloud.fullname" .) }}
+{{- end }}
+{{- if .Values.nextcloud.dataVolume.enabled }}
+        - name: nextcloud-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.nextcloud.dataVolume.existingClaim | default (printf "%s-data" (include "nextcloud.fullname" .)) }}
 {{- end }}
 {{- if or .Values.nextcloud.configs .Values.nextcloud.defaultConfigs }}
         - name: nextcloud-config
           configMap:
             name: {{ template "nextcloud.fullname" . }}-config
+{{- end }}
+{{- if .Values.nextcloud.extraVolumes }}
+{{- range $index, $pvc := .Values.nextcloud.extraVolumes }}
+        - name: {{ $pvc.name }}
+          persistentVolumeClaim: 
+            claimName: {{ $pvc.existingClaim | default (printf "%s-%s" (include "nextcloud.fullname" $) $pvc.name) }}
+{{- end }}
 {{- end }}

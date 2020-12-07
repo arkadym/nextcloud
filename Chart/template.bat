@@ -1,0 +1,1 @@
+helm template rel-name nextcloud -f nextcloud\values.yaml --namespace namespace > template.yaml

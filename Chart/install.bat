@@ -1,0 +1,1 @@
+helm install --namespace <namespace> --name <release-name> -f values.yaml nextcloud

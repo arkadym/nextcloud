@@ -1,5 +1,6 @@
-{{- $pvc := .Values.nextcloud.persistence -}}
+{{- $pvc := .Values.nextcloud.dataVolume -}}
 {{- $name := include "nextcloud.fullname" . }}
+{{- $name := printf "%s-data" (include "nextcloud.fullname" .) }}
 {{- if and ($pvc.enabled) ($pvc.pvSpec) (not $pvc.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolume
