@@ -33,7 +33,7 @@ spec:
             - '-c'
             - |
               if [ ! -f /tmp/html/version.php ]; then
-                chown -R www-data:www-data /tmp/www {{- if .Values.nextcloud.dataVolume.enabled -}}/tmp/data {{- end -}}{{- if .Values.nextcloud.extraVolumes -}}{{- range $index, $pvc := .Values.nextcloud.extraVolumes -}}{{ $pvc.mountPath }} {{- end -}}{{- end -}}
+                chown -R www-data:www-data /tmp/www {{ if .Values.nextcloud.dataVolume.enabled -}}/tmp/data {{ end -}}{{ range $index, $pvc := .Values.nextcloud.extraVolumes -}}{{ $pvc.mountPath }} {{ end }}
               fi
           volumeMounts:
 {{- if .Values.nextcloud.persistence.enabled }}
