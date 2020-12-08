@@ -133,7 +133,7 @@ spec:
               value: {{ .Values.nextcloud.config.email.domain | quote }}
 {{- if .Values.nextcloud.config.email.tls }}
             - name: SMTP_SECURE
-              value: "ssl"
+              value: "tls"
 {{- end }}
 {{- if .Values.redis.enabled }}
             - name: REDIS_HOST
