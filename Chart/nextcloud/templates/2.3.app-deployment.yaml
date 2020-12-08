@@ -33,7 +33,7 @@ spec:
             - '-c'
             - |
               if [ ! -f /tmp/html/version.php ]; then
-                chown -R www-data:www-data /tmp/www {{ if .Values.nextcloud.dataVolume.enabled -}}/tmp/data {{ end -}}{{ range $index, $pvc := .Values.nextcloud.extraVolumes -}}{{ $pvc.mountPath }} {{ end }}
+                chown -R www-data:www-data /tmp/www{{ if .Values.nextcloud.dataVolume.enabled -}} /tmp/data{{ end }}{{ range $pvc := .Values.nextcloud.extraVolumes }} {{ $pvc.mountPath }}{{ end }}
               fi
           volumeMounts:
 {{- if .Values.nextcloud.persistence.enabled }}
@@ -160,7 +160,7 @@ spec:
                   key: admin-password
 {{- end }}
             - name: NEXTCLOUD_TRUSTED_DOMAINS
-              value: {{ .Values.nextcloud.config.serverName | quote }}
+              value: "{{ .Values.nextcloud.config.serverName }}{{ range $igs := .Values.nextcloud.extraIngresses }} {{ $igs.serverName }}{{ end }}"
 {{- if .Values.nextcloud.config.dataDirectory }}
             - name: NEXTCLOUD_DATA_DIR
               value: {{ .Values.nextcloud.config.dataDirectory | quote }}
