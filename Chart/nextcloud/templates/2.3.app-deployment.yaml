@@ -147,7 +147,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "nextcloud.redis.fullname" . }}
+                  name: {{ template "nextcloud.redis.fullname" . }}-master
                   key: redis-password
 {{- end }}
 {{- if and .Values.nextcloud.config.admin .Values.nextcloud.config.admin.username }}
