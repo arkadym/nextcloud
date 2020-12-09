@@ -144,7 +144,7 @@ spec:
 {{- else }}
               value: {{ .Values.redis.redisPort | quote }}
 {{- end }}
-            - name: REDIS_PASSWORD
+            - name: REDIS_HOST_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ template "nextcloud.redis.fullname" . }}
