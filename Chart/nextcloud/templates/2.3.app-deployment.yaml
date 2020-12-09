@@ -137,7 +137,7 @@ spec:
 {{- end }}
 {{- if .Values.redis.enabled }}
             - name: REDIS_HOST
-              value: {{ template "nextcloud.redis.fullname" . }}
+              value: {{ template "nextcloud.redis.fullname" . }}-master
             - name: REDIS_HOST_PORT
 {{- if .Values.redis.sentinel.enabled }}
               value: {{ .Values.redis.sentinel.service.sentinelPort | quote }}
@@ -147,7 +147,7 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "nextcloud.redis.fullname" . }}-master
+                  name: {{ template "nextcloud.redis.fullname" . }}
                   key: redis-password
 {{- end }}
 {{- if and .Values.nextcloud.config.admin .Values.nextcloud.config.admin.username }}

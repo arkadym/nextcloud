@@ -3,7 +3,7 @@ home: https://github.com/arkadym/nextcloud
 description: A Nexcloud Helm chart for Kubernetes. Idea and docker images are taken from Bitnami.
 name: nextcloud
 icon: https://cdn.rawgit.com/docker-library/docs/defa5ffc7123177acd60ddef6e16bddf694cc35f/nextcloud/logo.svg
-version: "1.20"
+version: "1.21"
 sources:
   - https://github.com/arkadym/nextcloud/tree/master/Chart/nextcloud
 maintainers:
