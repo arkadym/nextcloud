@@ -354,6 +354,7 @@ onlyoffice:
     tls: true
 #    tlsSecretName: ""
     letsEncrypt: true
+    annotations: {}
 
 elasticsearch:
   enabled: true
