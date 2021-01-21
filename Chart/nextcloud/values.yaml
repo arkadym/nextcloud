@@ -414,11 +414,11 @@ backup-config:
     tag: "1.22"
 
   storage:
-    azure: 
-      accountKey: "azure-account-key"
-      accountName: "azure-account-name"
-      containerName: "container-name"
-#      prefix: ""
+    azure: {} 
+      # accountKey: "azure-account-key"
+      # accountName: "azure-account-name"
+      # containerName: "container-name"
+      # prefix: ""
 
   folders:
     - name: nextcloud-data
