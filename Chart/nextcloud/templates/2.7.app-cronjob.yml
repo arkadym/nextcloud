@@ -14,6 +14,7 @@ spec:
   successfulJobsHistoryLimit: {{ .Values.nextcloud.cronjob.successfulJobsHistoryLimit | default "1" }}
   failedJobsHistoryLimit: {{ .Values.nextcloud.cronjob.failedJobsHistoryLimit | default "1" }}
   concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
   jobTemplate:
     spec:
       backoffLimit: {{ .Values.nextcloud.cronjob.backoffLimit | default "0" }}
