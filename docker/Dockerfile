@@ -3,8 +3,8 @@ FROM nextcloud:21.0.0-apache
 RUN apt update \
  && apt upgrade \
  && mkdir -p /usr/share/man/man1 \
- && apt install libreoffice libreoffice-l10n-ru libreoffice-help-ru \
- && apt install ffmpeg imagemagick ghostscript \
+ && apt install -y libreoffice libreoffice-l10n-ru libreoffice-help-ru \
+ && apt install -y ffmpeg imagemagick ghostscript \
  && rm -rf /var/lib/apt/lists/*
 
 RUN cat /etc/ImageMagick-6/policy.xml | sed 's/domain="coder" rights="none"/domain="coder" rights="read|write"/' \
